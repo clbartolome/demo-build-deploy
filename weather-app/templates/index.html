@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <form method="post" class="weather-form">
+            <input type="text" name="city" placeholder="Enter city" required>
+            <button type="submit">Get Weather</button>
+        </form>
+        
+        {% if weather or error %}
+            <div id="weather-container">
+                <h2>{{ weather['name'] if weather else 'Error' }}</h2>
+                <p>{{ weather['weather'][0]['description'] if weather else 'No data available' }}</p>
+                <div id="weather-animation" data-condition="{{ weather['weather'][0]['main'].lower() if weather else '' }}" data-error="{{ 'true' if error else 'false' }}"></div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='weather.js') }}"></script>
+</body>
+</html>
