@@ -2,7 +2,7 @@
 
 Demo to show up how OpenShift can help with applications build and deploy tasks
 
-## Installation
+## Install
 
 ### Pre-requisites
 - OpenShift GitOps Operator installed with default configuration
@@ -10,8 +10,16 @@ Demo to show up how OpenShift can help with applications build and deploy tasks
 ### Deployment
 - Open a terminal
 - Login into OpenShift with an admin rights user
-- Run installation file: `ansible-playbook install.yaml`
+- Access installation->ansible-navigator: `cd installation/ansible-navigator`
+- Run installation: `ansible-navigator run ../install.yaml -m stdout`
 - Review installed resources in final playbook message
+
+### Uninstall
+
+- Open a terminal
+- Login into OpenShift with an admin rights user
+- Access installation->ansible-navigator: `cd installation/ansible-navigator`
+- Run uninstallation: `ansible-navigator run ../uninstall.yaml -m stdout`
 
 ## Demo
 

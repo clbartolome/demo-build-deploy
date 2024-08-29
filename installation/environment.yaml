@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: demo-environment
+  name: demo-environment #Do not change this name (or update uninstall playbook)
   namespace: openshift-gitops
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/clbartolome/demo-build-deploy.git
     targetRevision: master
-    path: deploy/environment/
+    path: installation/environment/
     directory:
       recurse: true
   destination:

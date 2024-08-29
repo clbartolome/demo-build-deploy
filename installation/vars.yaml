@@ -1,0 +1,4 @@
+demoNamespaces:
+  - name: gitea
+
+argo_user: admin
