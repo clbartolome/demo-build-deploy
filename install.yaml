@@ -1,0 +1,58 @@
+---
+- name: Demo Installation
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    api_server: "{{ lookup('ansible.builtin.pipe', 'oc whoami --show-server') }}"
+    base_domain: "{{ api_server | urlsplit('hostname') | regex_replace('^api\\.', '') }}"
+    argo_user: "admin"
+    projects: 
+      - gitea
+
+  tasks:
+
+    - name: Create Gitea Project
+      kubernetes.core.k8s:
+        api_version: v1
+        kind: Namespace
+        name: gitea
+
+    - name: Assign GitOps cluster-admin role to ArgoCD
+      ansible.builtin.command: >
+        oc adm policy add-cluster-role-to-user cluster-admin 
+        system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller
+        -n openshift-gitops
+
+    - name: Deploy Hackathon Environment via GitOps
+      kubernetes.core.k8s:
+        state: present
+        src: "deploy/environment.yaml"
+
+    - name: Get ArgoCD Route
+      kubernetes.core.k8s_info:
+        name: openshift-gitops-server
+        namespace: openshift-gitops
+        kind: Route
+        api_version: route.openshift.io/v1
+      register: argo_route
+
+    - name: Get ArgoCD Admin Password
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Secret
+        namespace: openshift-gitops
+        name: openshift-gitops-cluster
+      register: argo_secret
+
+    - name: Decode ArgoCD Admin Password
+      ansible.builtin.set_fact:
+        argo_pass: "{{ argo_secret.resources[0] | community.general.json_query('data.\"admin.password\"') | b64decode }}"
+
+    - name: Print Demo Details
+      ansible.builtin.debug:
+        msg: 
+          - "ArgoCD:"
+          - "    - Url:": https://{{ argo_route.resources[0].spec.host }}"
+          - "    - User: {{ argo_user }}"
+          - "    - Pass: {{ argo_pass }}"
