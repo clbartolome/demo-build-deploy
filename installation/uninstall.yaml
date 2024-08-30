@@ -34,7 +34,7 @@
 
     - name: Remove Demo live created namespaces
       ansible.builtin.command:
-        cmd: oc delete project existing-image
+        cmd: oc delete project existing-image containerfile-build s2i-build
       ignore_errors: true
   
   vars_files:
