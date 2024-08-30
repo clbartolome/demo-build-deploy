@@ -2,13 +2,14 @@
 - name: Demo Installation
   hosts: localhost
   gather_facts: false
-
-  vars:
-    api_server: "{{ lookup('ansible.builtin.pipe', 'oc whoami --show-server') }}"
-    base_domain: "{{ api_server | urlsplit('hostname') | regex_replace('^api\\.', '') }}"
+  collections:
+    - community.general
 
   tasks:
-
+    - name: Setup kubeconfig file
+      include_role:
+        name: kubeconfig
+    
     - name: Create Demo namespaces
       kubernetes.core.k8s:
         state: present
@@ -30,35 +31,25 @@
     - name: Deploy Environment via GitOps
       kubernetes.core.k8s:
         state: present
-        src: "installation/environment.yaml"
+        src: "environment.yaml"
 
-    - name: Get ArgoCD Route
-      kubernetes.core.k8s_info:
-        name: openshift-gitops-server
-        namespace: openshift-gitops
-        kind: Route
-        api_version: route.openshift.io/v1
-      register: argo_route
-
-    - name: Get ArgoCD Admin Password
-      kubernetes.core.k8s_info:
-        api_version: v1
-        kind: Secret
-        namespace: openshift-gitops
-        name: openshift-gitops-cluster
-      register: argo_secret
-
-    - name: Decode ArgoCD Admin Password
-      ansible.builtin.set_fact:
-        argo_pass: "{{ argo_secret.resources[0] | community.general.json_query('data.\"admin.password\"') | b64decode }}"
+    - name: Get argoCD admin password
+      ansible.builtin.command:
+        cmd: oc get secret openshift-gitops-cluster -n openshift-gitops -ojsonpath='{.data.admin\.password}'
+      register: argoPass
 
     - name: Demo Environment Details
       ansible.builtin.debug:
-        msg: 
-          - "ArgoCD:"
-          - "    - Url:": https://{{ argo_route.resources[0].spec.host }}"
-          - "    - User: {{ argo_user }}"
-          - "    - Pass: {{ argo_pass }}"
+        msg:
+        - "--------------------------------------------------------------------------"
+        - "Gitea URL: http://gitea-gitea.apps.{{ ocp_host }}"
+        - "Gitea Credentials: gitea / openshift"
+        - "--------------------------------------------------------------------------"
+        - "OpenShift GitOps URL: https://openshift-gitops-server-openshift-gitops.apps.{{ ocp_host }}"
+        - "OpenShift GitOps Credentials: admin / {{ argoPass.stdout | b64decode  }}"
+        - "--------------------------------------------------------------------------"
+        - "Note: wait until demo-environment application is synced in ArgoCD"
+        - "--------------------------------------------------------------------------"
   
   vars_files:
     - vars.yaml

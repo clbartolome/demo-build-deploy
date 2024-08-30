@@ -9,17 +9,25 @@ Demo to show up how OpenShift can help with applications build and deploy tasks
 
 ### Deployment
 - Open a terminal
-- Login into OpenShift with an admin rights user
 - Access installation->ansible-navigator: `cd installation/ansible-navigator`
-- Run installation: `ansible-navigator run ../install.yaml -m stdout`
+- Run installation:
+```sh
+ansible-navigator run ../install.yaml -m stdout \
+    -e "ocp_host=<** e.g.: server.domain.com **>" \
+    -e "api_token=<** e.g.: sha256~..... **>"
+```
 - Review installed resources in final playbook message
 
 ### Uninstall
 
 - Open a terminal
-- Login into OpenShift with an admin rights user
 - Access installation->ansible-navigator: `cd installation/ansible-navigator`
-- Run uninstallation: `ansible-navigator run ../uninstall.yaml -m stdout`
+- Run uninstallation: 
+```sh
+ansible-navigator run ../uninstall.yaml -m stdout \
+    -e "ocp_host=<** e.g.: server.domain.com **>" \
+    -e "api_token=<** e.g.: sha256~..... **>"
+```
 
 ## Demo
 

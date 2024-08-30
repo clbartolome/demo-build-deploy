@@ -77,7 +77,7 @@ spec:
           fi
 
           git clone http://gitea:openshift@$GITEA_HOSTNAME/gitea/weather-app
-          cp -r openshift-devops/weather-app/. weather-app
+          cp -r demo-build-deploy/weather-app/. weather-app
           cd weather-app
           git config user.email "gitea@gitea.com"
           git config user.name "gitea"
