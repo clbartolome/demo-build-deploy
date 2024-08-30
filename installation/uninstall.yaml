@@ -26,6 +26,16 @@
       loop: "{{ demoNamespaces }}"
       loop_control:
         loop_var: namespace
+
+    - name: Remove /tmp live created files
+      ansible.builtin.command:
+        cmd: rm -rf /tmp/weather-app
+      ignore_errors: true
+
+    - name: Remove Demo live created namespaces
+      ansible.builtin.command:
+        cmd: oc delete project existing-image
+      ignore_errors: true
   
   vars_files:
     - vars.yaml

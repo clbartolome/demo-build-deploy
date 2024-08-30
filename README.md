@@ -24,7 +24,9 @@ ansible-navigator run ../install.yaml -m stdout \
 - Access installation->ansible-navigator: `cd installation/ansible-navigator`
 - Run uninstallation: 
 ```sh
-
+ansible-navigator run ../uninstall.yaml -m stdout \
+    -e "ocp_host=<** e.g.: server.domain.com **>" \
+    -e "api_token=<** e.g.: sha256~..... **>"
 ```
 
 ## Demo
