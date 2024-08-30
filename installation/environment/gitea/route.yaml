@@ -15,6 +15,6 @@ spec:
     weight: 100
   port:
     targetPort: 3000-tcp
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
+  # tls:
+  #   termination: edge
+  #   insecureEdgeTerminationPolicy: Redirect
