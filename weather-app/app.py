@@ -26,5 +26,10 @@ def index():
             error = True
     return render_template('index.html', weather=weather, error=error)
 
+@app.route('/health', methods=['GET', 'POST'])
+def health():
+    data = {'message': 'Everything is OK'}
+    return data, 200
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

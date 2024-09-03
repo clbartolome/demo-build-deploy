@@ -84,6 +84,20 @@ spec:
           git add . && git commit -m "Repository cloned from demo source" && git push
           cd ..
           echo "------------------------------"   
+          
+          echo "-- Creating weather-deploy repository --"
+          RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
+            -u gitea:openshift \
+            -d '{"auto_init": true,"default_branch": "master","gitignores": "VisualStudioCode","name": "weather-deploy","private": false,"trust_model": "default"}' \
+            -H "Content-Type: application/json" \
+            http://$GITEA_HOSTNAME/api/v1/user/repos)
+
+          if [ "$RESPONSE" != "201" ]; then
+              echo "Error creating repository, error code: $RESPONSE"
+              exit 1
+          fi
+
+          echo "------------------------------"   
 
 
           
