@@ -1,0 +1,12 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: weather-app
+spec:
+  port:
+    targetPort: 5000-tcp
+  to:
+    kind: Service
+    name: weather-app
+    weight: 100
+  wildcardPolicy: None

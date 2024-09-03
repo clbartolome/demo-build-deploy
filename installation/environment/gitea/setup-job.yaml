@@ -97,6 +97,13 @@ spec:
               exit 1
           fi
 
+          git clone http://gitea:openshift@$GITEA_HOSTNAME/gitea/weather-deploy
+          cp -r demo-build-deploy/weather-deploy/. weather-deploy
+          cd weather-deploy
+          git config user.email "gitea@gitea.com"
+          git config user.name "gitea"
+          git add . && git commit -m "Repository cloned from demo source" && git push
+          cd ..
           echo "------------------------------"   
 
 
