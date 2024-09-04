@@ -1,0 +1,247 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  generation: 1
+  labels:
+    app.kubernetes.io/instance: ci-cd
+    app.kubernetes.io/name: ci-cd
+    operator.tekton.dev/operand-name: openshift-pipelines-addons
+    pipeline.openshift.io/runtime: python
+    pipeline.openshift.io/runtime-version: python-311
+    pipeline.openshift.io/type: kubernetes
+  name: ci-cd
+  namespace: ci-cd-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "41"
+spec:
+  params:
+    - name: APP_NAME
+      type: string
+    - name: APP_REPO
+      type: string
+    - default: master
+      name: APP_REVISION
+      type: string
+    - name: DEPLOY_REPO
+      type: string
+    - default: master
+      name: DEPLOY_REVISION
+      type: string
+    - name: IMAGE_REGISTRY
+      default: image-registry.openshift-image-registry.svc:5000    
+      type: string
+    - name: IMAGE
+      type: string
+    - default: python:3.11-ubi9
+      name: BUILD_VERSION
+      type: string
+    - default: ci-cd-config
+      name: CONFIGURATION_SECRET
+      type: string
+  workspaces: 
+    - workspace
+  tasks:
+   # ------------ GET PIPELINERUN URL (console) ------------ #
+    - name: get-pipelinerun-url
+      params:
+        - name: PIPELINERUN_UID
+          value: $(context.pipelineRun.name)
+      taskRef:
+        kind: Task
+        name: pipelinerun-url
+    # ------------ FETCH REPOSITORIES ------------ #
+    - name: fetch-app-repository
+      params:
+        - name: url
+          value: $(params.APP_REPO)
+        - name: revision
+          value: $(params.APP_REVISION)
+        - name: subdirectory
+          value: app-repo
+        - name: deleteExisting
+          value: 'true'
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: workspace
+    - name: fetch-deploy-repository
+      params:
+        - name: url
+          value: $(params.DEPLOY_REPO)
+        - name: revision
+          value: $(params.DEPLOY_REVISION)
+        - name: subdirectory
+          value: deploy-repo
+        - name: deleteExisting
+          value: 'true'
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: workspace
+    # ------------ TESTS ------------ #
+    - name: tests
+      runAfter:
+        - get-pipelinerun-url
+        - fetch-app-repository
+        - fetch-deploy-repository
+      taskRef:
+        kind: Task
+        name: mock
+      params:
+        - name: MOCK_MSG
+          value: test
+    # ------------ BUILD ------------ #
+    # Created image Digest in results: IMAGE_DIGEST
+    - name: build-image
+      runAfter:
+        - tests
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE_REGISTRY)/$(params.IMAGE)
+        - name: TLSVERIFY
+          value: 'false'
+        - name: PATH_CONTEXT
+          value: app-repo
+        - name: VERSION
+          value: $(params.BUILD_VERSION)
+      taskRef:
+        kind: Task
+        name: s2i
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ GENERATE VERSION ------------ #
+    - name: generate-version
+      runAfter:
+        - tests
+      taskRef:
+        kind: Task
+        name: generate-version
+      params:
+        - name: PATH_CONTEXT
+          value: app-repo
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ TAG IMAGE ------------ #
+    - name: tag-image-rc
+      runAfter:
+        - generate-version
+        - build-image
+      taskRef:
+        kind: Task
+        name: tag-image
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE)
+        - name: IMAGE_DIGEST
+          value: "$(tasks.build-image.results.IMAGE_DIGEST)"
+        - name: IMAGE_NEW_TAG
+          value: "$(tasks.generate-version.results.VERSION)-rc"
+    # ------------ DEPLOY TO DEV ------------ #
+    - name: deploy-dev
+      runAfter:
+        - tag-image-rc
+      taskRef:
+        kind: Task
+        name: deploy
+      params:
+        - name: APP_NAME
+          value: $(params.APP_NAME)
+        - name: PATH_CONTEXT
+          value: deploy-repo
+        - name: ENV
+          value: dev
+        - name: IMAGE_REGISTRY
+          value: $(params.IMAGE_REGISTRY)
+        - name: IMAGE
+          value: $(params.IMAGE)
+        - name: IMAGE_VERSION
+          value: "$(tasks.generate-version.results.VERSION)-rc"
+        - name: REPO
+          value: "$(params.DEPLOY_REPO)"
+        - name: CONFIGURATION_SECRET
+          value: "$(params.CONFIGURATION_SECRET)"
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ CREATE PRE_RELEASE ------------ #
+    - name: validations
+      runAfter:
+        - deploy-dev
+      taskRef:
+        kind: Task
+        name: mock
+      params:
+        - name: MOCK_MSG
+          value: validations
+    # ------------ CREATE RELEASE ------------ #
+    - name: git-release
+      runAfter:
+        - validations
+      taskRef:
+        kind: Task
+        name: git-release
+      params:
+        - name: APP_NAME
+          value: $(params.APP_NAME)
+        - name: PATH_CONTEXT
+          value: app-repo
+        - name: IMAGE_VERSION
+          value: "$(tasks.generate-version.results.VERSION)"
+        - name: REPO
+          value: "$(params.APP_REPO)"
+        - name: CONFIGURATION_SECRET
+          value: "$(params.CONFIGURATION_SECRET)"
+        - name: PIPELINERUN_URL
+          value: "$(tasks.get-pipelinerun-url.results.PIPELINERUN_URL)"
+      workspaces:
+        - name: source
+          workspace: workspace
+    - name: tag-release
+      runAfter:
+        - validations
+      taskRef:
+        kind: Task
+        name: tag-image
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE)
+        - name: IMAGE_TAG
+          value: "$(tasks.generate-version.results.VERSION)-rc"
+        - name: IMAGE_NEW_TAG
+          value: "$(tasks.generate-version.results.VERSION)"
+    # ------------ PR DEPLOY TO LIVE ------------ #
+    - name: deploy-live
+      runAfter:
+        - git-release
+        - tag-release
+      taskRef:
+        kind: Task
+        name: deploy
+      params:
+        - name: APP_NAME
+          value: $(params.APP_NAME)
+        - name: PATH_CONTEXT
+          value: deploy-repo
+        - name: ENV
+          value: live
+        - name: IMAGE_REGISTRY
+          value: $(params.IMAGE_REGISTRY)
+        - name: IMAGE
+          value: $(params.IMAGE)
+        - name: IMAGE_VERSION
+          value: "$(tasks.generate-version.results.VERSION)"
+        - name: REPO
+          value: "$(params.DEPLOY_REPO)"
+        - name: CONFIGURATION_SECRET
+          value: "$(params.CONFIGURATION_SECRET)"
+      workspaces:
+        - name: source
+          workspace: workspace
+  workspaces:
+    - name: workspace

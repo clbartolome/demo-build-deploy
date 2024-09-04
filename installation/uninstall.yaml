@@ -29,13 +29,21 @@
 
     - name: Remove /tmp live created files
       ansible.builtin.command:
-        cmd: rm -rf /tmp/weather-app
+        cmd: rm -rf /tmp/weather-app /tmp/tekton
       ignore_errors: true
 
     - name: Remove Demo live created namespaces
       ansible.builtin.command:
-        cmd: oc delete project existing-image containerfile-build s2i-build
+        cmd: oc delete project "{{ namespace }}"
       ignore_errors: true
+      loop:
+        - existing-image 
+        - containerfile-build 
+        - s2i-build 
+        - tekton-review
+        - argo-review
+      loop_control:
+        loop_var: namespace
   
   vars_files:
     - vars.yaml

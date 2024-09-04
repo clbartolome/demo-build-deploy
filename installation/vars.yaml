@@ -1,4 +1,12 @@
 demoNamespaces:
   - name: gitea
+  - name: ci-cd-demo
+  - name: weather-dev
+  - name: weather-live
 
 argo_user: admin
+
+# Configure if you need namespaces to pull images from an specific one
+imagesSource:
+  enabled: true
+  namespace: ci-cd-demo

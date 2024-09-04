@@ -7,6 +7,9 @@ bases:
 commonLabels:
   environment: live
 
+patchesStrategicMerge:
+- ./deploy-replicas-patch.yaml
+
 secretGenerator:
 - name: weather-app-secured-configuration
   envs:

@@ -21,13 +21,11 @@ spec:
         deployment: weather-app
     spec:
       containers:
-      - env:
-        - name: WEATHER_API_KEY
-          valueFrom:
-            secretKeyRef:
-              key: WEATHER_API_KEY
-              name: weather-app
-          image: weather-app:version
+      - name: weather-app
+        envFrom: 
+        - secretRef:
+            name: weather-app-secured-configuration
+        image: weather-app:version
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
@@ -38,7 +36,6 @@ spec:
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 1
-        name: weather-app
         ports:
         - containerPort: 5000
           protocol: TCP
