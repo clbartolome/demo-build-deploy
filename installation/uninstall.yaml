@@ -37,9 +37,9 @@
         cmd: oc delete project "{{ namespace }}"
       ignore_errors: true
       loop:
-        - existing-image 
-        - containerfile-build 
-        - s2i-build 
+        - demo1 
+        - demo2
+        - demo3
         - tekton-review
         - argo-review
       loop_control:

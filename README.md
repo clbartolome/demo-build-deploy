@@ -65,7 +65,7 @@ podman push quay.io/calopezb/weather-app:1.0-30082024 #Use current date for tag
 
 - Create a namespace:
 ```sh
-oc new-project existing-image
+oc new-project demo1
 ```
 
 - Go to OCP console (developer view) > +Add > Container images > Create application
@@ -76,7 +76,7 @@ oc new-project existing-image
 
 - Create a namespace:
 ```sh
-oc new-project containerfile-build
+oc new-project demo2
 ```
 
 - Go to OCP console (develop
@@ -89,7 +89,7 @@ er view) > +Add > Import from Git > Create application using Dockerfile  (! Add 
 
 - Create a namespace:
 ```sh
-oc new-project s2i-build
+oc new-project demo3
 ```
 
 - Remove existing Dockerfile:
@@ -111,7 +111,7 @@ oc get is python -n openshift -o yaml
 - Create application using `oc new-app` command:
 ```sh
 oc new-app --help # review examples
-oc new-app --name=weather-app \
+oc new-app --name=demo3 \
   openshift/python:3.11-ubi9~http://gitea-gitea.apps.$OCP_HOST/gitea/weather-app.git \
   --strategy=source --as-deployment-config=false
 ```
@@ -119,32 +119,32 @@ oc new-app --name=weather-app \
 - Review resources:
 ```sh
 oc get pods
-oc logs weather-app-1-build -f
+oc logs demo3-1-build -f
 oc get all # wrong port and missing route
 ```
 
 - Fix service and expose via https:
 ```sh
-oc edit svc weather-app # change targetPort to 5000
+oc edit svc demo3 # change targetPort to 5000
 
-oc expose svc weather-app
+oc expose svc demo3
 ```
 
 - Create a Secret with API key and add it to the deployment:
 ```sh
-oc create secret generic weather-app  --from-literal WEATHER_API_KEY=<key>
-oc get secret weather-app -o yaml
+oc create secret generic demo3  --from-literal WEATHER_API_KEY=<key>
+oc get secret demo3 -o yaml
 echo <base64-key> | base64 -d
 
-oc set env deploy/weather-app --from secret/weather-app
+oc set env deploy/demo3 --from secret/demo3
 
 oc get pods # show terminating + new pod
-oc rsh weather-app-?? # Access new pod and printenv
+oc rsh demo3-?? # Access new pod and printenv
 ```
 
 - Add Python logo:
 ```sh
-oc label deploy weather-app app.openshift.io/runtime=python
+oc label deploy demo3 app.openshift.io/runtime=python
 ```
 
 - Review app is working by accessing the route
@@ -272,9 +272,9 @@ We're going to use the application resources created in section [1.3. Use Source
 
 - Go to Gitea and create a repository named `demo-argo`
 
-- Go to s2i-build namespace and clone previous repo:
+- Go to demo3 namespace and clone previous repo:
 ```sh
-oc project s2i-build
+oc project demo3
 
 cd /tmp
 git clone http://gitea-gitea.apps.$OCP_HOST/gitea/demo-argo.git
@@ -284,14 +284,14 @@ cd demo-argo
 
 - Add a liveness probe:
 ```sh
-oc set probe deploy/weather-app --liveness --get-url=http://:5000/health
+oc set probe deploy/demo3 --liveness --get-url=http://:5000/health
 
-oc describe deploy weather-app
+oc describe deploy demo3
 ```
 
 - Get application deployment
 ```sh
-oc get deploy weather-app -o yaml > deployment.yaml
+oc get deploy demo3 -o yaml > deployment.yaml
 vi deployment.yaml
 ```
   Cleanup deployment:
@@ -313,7 +313,7 @@ vi deployment.yaml
   
 - Download service:
 ```sh
-oc get svc weather-app -o yaml > service.yaml
+oc get svc demo3 -o yaml > service.yaml
 vi service.yaml
 ```
 
@@ -324,7 +324,7 @@ vi service.yaml
 
 - Download route:
 ```sh
-oc get route weather-app -o yaml > route.yaml
+oc get route demo3 -o yaml > route.yaml
 vi route.yaml
 ```
 
@@ -337,7 +337,7 @@ vi route.yaml
 
 - Download secret:
 ```sh
-oc get secret weather-app -o yaml > secret.yaml
+oc get secret demo3 -o yaml > secret.yaml
 vi secret.yaml
 ```
 
@@ -374,7 +374,7 @@ oc new-project argo-review
       - Path: ``
     - Destination:
       - Cluster URL: `https://kubernetes.default.svc`
-      - Namespace: `dargo-review`
+      - Namespace: `argo-review`
 
 - Review deployment and application
 
