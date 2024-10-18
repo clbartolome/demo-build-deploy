@@ -14,5 +14,5 @@ secretGenerator:
 
 images:
 - name: weather-app
-  newName: quay.io/calopezb/weather-app:1.0-18092024
-  newTag: none
+  newName: quay.io/calopezb/weather-app
+  newTag: 1.0-18092024
