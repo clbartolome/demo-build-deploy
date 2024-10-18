@@ -14,6 +14,10 @@
         kind: Application
         namespace: openshift-gitops
         name: demo-environment
+    
+    - name: Small pause # (TODO: use argoCD instead of this sh**)
+      ansible.builtin.pause:
+        minutes: 1
 
     - name: Delete Demo namespaces
       kubernetes.core.k8s:

@@ -2,6 +2,12 @@
 
 Demo to show up how OpenShift can help with applications build and deploy tasks
 
+> [!IMPORTANT]  
+> Last working versions: 
+> - OpenShift: 4.16.13
+> - OpenShift GitOps: 1.14.0
+> - OpenShift Pipelines: 1.15.1 
+
 ## Install
 
 ### Pre-requisites
@@ -15,9 +21,7 @@ Demo to show up how OpenShift can help with applications build and deploy tasks
 - Access installation->ansible-navigator: `cd installation/ansible-navigator`
 - Run installation:
 ```sh
-ansible-navigator run ../install.yaml -m stdout \
-    -e "ocp_host=<** e.g.: server.domain.com **>" \
-    -e "api_token=<** e.g.: sha256~..... **>"
+ansible-navigator run ../install.yaml -m stdout -e "ocp_host=<** e.g.: server.domain.com **>" -e "api_token=<** e.g.: sha256~..... **>"
 ```
 - Review installed resources in final playbook message
 
@@ -27,9 +31,7 @@ ansible-navigator run ../install.yaml -m stdout \
 - Access installation->ansible-navigator: `cd installation/ansible-navigator`
 - Run uninstallation: 
 ```sh
-ansible-navigator run ../uninstall.yaml -m stdout \
-    -e "ocp_host=<** e.g.: server.domain.com **>" \
-    -e "api_token=<** e.g.: sha256~..... **>"
+ansible-navigator run ../uninstall.yaml -m stdout -e "ocp_host=<** e.g.: server.domain.com **>" -e "api_token=<** e.g.: sha256~..... **>"
 ```
 
 ## Demo
