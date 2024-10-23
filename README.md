@@ -16,22 +16,33 @@ Demo to show up how OpenShift can help with applications build and deploy tasks
 - Tekton CLI installed in your laptop
 
 
-### Deployment
+### Deploy
+
 - Open a terminal
+- Login into OpenShift
 - Access installation->ansible-navigator: `cd installation/ansible-navigator`
 - Run installation:
 ```sh
-ansible-navigator run ../install.yaml -m stdout -e "ocp_host=<** e.g.: server.domain.com **>" -e "api_token=<** e.g.: sha256~..... **>"
+OPENSHIFT_TOKEN=$(oc whoami --show-token)
+CLUSTER_DOMAIN=$(oc whoami --show-server | sed 's~https://api\.~~' | sed 's~:.*~~')
+ansible-navigator run ../install.yaml -m stdout \
+    -e "ocp_host=$CLUSTER_DOMAIN" \
+    -e "api_token=$OPENSHIFT_TOKEN"
 ```
 - Review installed resources in final playbook message
 
 ### Uninstall
 
 - Open a terminal
+- Login into OpenShift
 - Access installation->ansible-navigator: `cd installation/ansible-navigator`
 - Run uninstallation: 
 ```sh
-ansible-navigator run ../uninstall.yaml -m stdout -e "ocp_host=<** e.g.: server.domain.com **>" -e "api_token=<** e.g.: sha256~..... **>"
+OPENSHIFT_TOKEN=$(oc whoami --show-token)
+CLUSTER_DOMAIN=$(oc whoami --show-server | sed 's~https://api\.~~' | sed 's~:.*~~')
+ansible-navigator run ../uninstall.yaml -m stdout \
+    -e "ocp_host=$CLUSTER_DOMAIN" \
+    -e "api_token=$OPENSHIFT_TOKEN"
 ```
 
 ## Demo
